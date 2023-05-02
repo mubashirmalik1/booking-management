@@ -29,10 +29,8 @@ class BookingFeatureTest extends TestCase
      */
     public function testGetSlots()
     {
-       // Artisan::call('migrate:fresh --seed');
-        // Create a service and configuration
+
         $service = Service::first();
-       // $service = Service::factory()->create();
 
         // get a scheduled off for the service
         $scheduledOff = ScheduledOff::where('service_id',$service->id)->first();
