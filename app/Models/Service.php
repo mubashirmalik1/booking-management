@@ -42,14 +42,76 @@ class Service extends Model
                 continue;
             }
 
-            $slotEnd = $startTime->copy()->addMinutes($this->duration);
-            $slots[] = [
-                'start_time' => $startTime->format('H:i'),
-                'end_time' => $slotEnd->format('H:i'),
-            ];
+            // Check if the number of bookings for this slot is less than max_clients_per_slot
+            $existingBookingsCount = Booking::where('service_id', $this->id)
+                ->where('booking_date', $date)
+                ->where('start_time', $startTime)
+                ->count();
+
+            if ($existingBookingsCount < $this->max_clients_per_slot) {
+                $slotEnd = $startTime->copy()->addMinutes($this->duration);
+                $slots[] = [
+                    'start_time' => $startTime->format('H:i'),
+                    'end_time' => $slotEnd->format('H:i'),
+                ];
+            }
 
             // Move to the next slot, considering the cleaning_time
-            $startTime = $slotEnd->addMinutes($this->cleaning_time);
+            $startTime->addMinutes($this->duration + $this->cleaning_time);
+        }
+
+        return $slots;
+    }
+
+    public function generateSlots1($date)
+    {
+        // Get the configuration for the given day
+        $dayOfWeek = Carbon::parse($date)->format('D');
+        $config = $this->configurations()
+            ->where('day', strtolower($dayOfWeek))
+            ->first();
+
+        // Return an empty array if no configuration is found for the day
+        if (!$config) {
+            return [];
+        }
+
+        $slots = [];
+        $startTime = Carbon::parse("{$date} {$config->start_time}");
+        $endTime = Carbon::parse("{$date} {$config->end_time}");
+
+        $lunchStartTime = $config->lunch_start_time ? Carbon::parse("{$date} {$config->lunch_start_time}") : null;
+        $lunchEndTime = $config->lunch_end_time ? Carbon::parse("{$date} {$config->lunch_end_time}") : null;
+
+        $cleaningStartTime = $config->cleaning_start_time ? Carbon::parse("{$date} {$config->cleaning_start_time}") : null;
+        $cleaningEndTime = $config->cleaning_end_time ? Carbon::parse("{$date} {$config->cleaning_end_time}") : null;
+
+        while ($startTime->lessThan($endTime)) {
+            if (($lunchStartTime && $startTime->greaterThanOrEqualTo($lunchStartTime) && $startTime->lessThan($lunchEndTime)) ||
+                ($cleaningStartTime && $startTime->greaterThanOrEqualTo($cleaningStartTime) && $startTime->lessThan($cleaningEndTime))) {
+                // Skip the current slot if it is within a break
+                $startTime->addMinutes($this->duration + $this->cleaning_time);
+                continue;
+            }
+            // Check if the number of bookings for this slot is less than max_clients_per_slot
+            $existingBookingsCount = Booking::query()
+                ->where('service_id', $this->id)
+                ->where('booking_date', $date)
+                ->where('start_time', $startTime)
+                ->count();
+
+            if ($existingBookingsCount < $this->max_clients_per_slot) {
+                $slotEnd = $startTime->copy()->addMinutes($this->duration);
+                $slots[] = [
+                    'start_time' => $startTime->format('H:i'),
+                    'end_time' => $slotEnd->format('H:i'),
+                ];
+            }
+
+            // Move to the next slot, considering the cleaning_time
+            //$startTime = $slotEnd->addMinutes($this->cleaning_time);
+            // Move to the next slot, considering the cleaning_time
+            $startTime->addMinutes($this->duration + $this->cleaning_time);
         }
 
         return $slots;

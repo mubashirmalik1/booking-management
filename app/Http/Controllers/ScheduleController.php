@@ -68,7 +68,8 @@ class ScheduleController extends Controller
 
         for ($i = 0; $i < $numBookings; $i++) {
             $booking = new Booking();
-            $booking->appointment_id = $validatedData['service_id'];
+            $booking->service_id = $validatedData['service_id'];
+            $booking->booking_date = $validatedData['booking_date'];
             $booking->start_time = $start_time;
             $booking->end_time = $end_time;
             $booking->first_name = $validatedData['first_name'][$i];
@@ -76,6 +77,8 @@ class ScheduleController extends Controller
             $booking->email = $validatedData['email'][$i];
             $booking->save();
         }
+
+        return response()->json(['status'=>'success']);
 
     }
 }
