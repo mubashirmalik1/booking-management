@@ -34,13 +34,10 @@ class BookingFeatureTest extends TestCase
         $service = Service::first();
        // $service = Service::factory()->create();
 
-        // Create a scheduled off for the service
-//        $scheduledOff = ScheduledOff::factory()->create([
-//            'service_id' => $service->id,
-//        ]);
+        // get a scheduled off for the service
+        $scheduledOff = ScheduledOff::where('service_id',$service->id)->first();
 
-        // Call the API endpoint
-        $response = $this->getJson('/api/slots');
+        $response = $this->getJson('/api/get-slots');
 
         // Check that the response is successful
         $response->assertStatus(Response::HTTP_OK);
@@ -53,7 +50,7 @@ class BookingFeatureTest extends TestCase
 
         // Check that the slot is not in the response
         $response->assertJsonMissing([
-            'date' => $scheduledOff->start_time->format('Y-m-d'),
+            'date' => date('Y-m-d', strtotime($scheduledOff->start_time)),
         ]);
     }
 
