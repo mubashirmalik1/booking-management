@@ -16,3 +16,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::controller(\App\Http\Controllers\ScheduleController::class)->group(function(){
+   Route::get('/get-slots','getSlots');
+   Route::Post('/save-slots','saveSlot');
+});

@@ -15,7 +15,10 @@ return new class extends Migration
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('appointment_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('service_id')->constrained()->cascadeOnDelete();
+            $table->date('booking_date');
+            $table->time('start_time');
+            $table->time('end_time');
             $table->string('first_name') ;// user first name
             $table->string('last_name'); // user last name
             $table->string('email');  // user email
