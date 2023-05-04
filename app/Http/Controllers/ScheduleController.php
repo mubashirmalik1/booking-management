@@ -22,7 +22,7 @@ class ScheduleController extends Controller
             $availableDays = $service->available_days_slots;
 
             $holidays = ScheduledOff::where('service_id', $service->id)
-                ->whereBetween('start_time', [$date->copy()->startOfDay(), $date->copy()->addDays(7)->endOfDay()])
+                ->whereBetween('start_time', [$date->copy()->startOfDay(), $date->copy()->addDays($availableDays)->endOfDay()])
                 ->get()
                 ->map(function ($holiday) {
                     return Carbon::parse($holiday->start_time)->format('Y-m-d');
